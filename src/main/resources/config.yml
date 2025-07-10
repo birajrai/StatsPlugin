@@ -2,4 +2,3 @@ mysql:
   url: jdbc:mysql://localhost:3306/stats5
   username: username
   password: password
-useRabbitMq: false

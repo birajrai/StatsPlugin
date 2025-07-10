@@ -6,7 +6,6 @@ import net.md_5.bungee.api.chat.ComponentBuilder;
 import net.md_5.bungee.api.chat.HoverEvent;
 import net.md_5.bungee.api.chat.TextComponent;
 import nl.lolmewn.stats.converters.Stats2;
-import nl.lolmewn.stats.global.GlobalStats;
 import nl.lolmewn.stats.listener.Playtime;
 import nl.lolmewn.stats.listener.bukkit.*;
 import nl.lolmewn.stats.player.PlayerManager;
@@ -19,7 +18,6 @@ import nl.lolmewn.stats.storage.WorldManager;
 import nl.lolmewn.stats.storage.mysql.MySQLConfig;
 import nl.lolmewn.stats.storage.mysql.MySQLStorage;
 import nl.lolmewn.stats.storage.mysql.MySQLWorldManager;
-import nl.lolmewn.stats.storage.rmq.RMQStorage;
 import nl.lolmewn.stats.Util;
 import org.bstats.bukkit.Metrics;
 import org.bukkit.World;
@@ -41,10 +39,8 @@ import java.util.logging.Logger;
 
 public class BukkitMain extends JavaPlugin {
 
-    private GlobalStats globalStats;
     private MySQLStorage storage;
     private WorldManager worldManager;
-    private RMQStorage rmqStorage;
 
     private static final Logger LOG = Logger.getLogger(BukkitMain.class.getName());
 
@@ -64,28 +60,6 @@ public class BukkitMain extends JavaPlugin {
             this.LOG.info("Please configure Stats and then restart your server");
             getServer().getPluginManager().disablePlugin(this);
             return;
-        }
-
-        if (super.getConfig().getBoolean("useRabbitMq", false)) {
-            try {
-                if (!startRabbitMq()) {
-                    this.LOG.info("RabbitMQ for Stats is not yet configured");
-                    this.LOG.info("Stats has generated a rabbitmq.properties file");
-                    this.LOG.info("Please configure RabbitMQ for Stats and then restart your server");
-                    getServer().getPluginManager().disablePlugin(this);
-                    try {
-                        Thread.sleep(5000);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                    return;
-                }
-            } catch (IOException | TimeoutException e) {
-                e.printStackTrace();
-                this.LOG.severe("RabbitMQ error, not starting plugin.");
-                getServer().getPluginManager().disablePlugin(this);
-                return;
-            }
         }
 
         SharedMain.registerStats();
@@ -113,36 +87,9 @@ public class BukkitMain extends JavaPlugin {
 
         SharedMain.serverUuid = super.getConfig().getString("server-id");
         SharedMain.setDebug(super.getConfig().getBoolean("debug", false));
-        if (!super.getConfig().getBoolean("global-stats-opt-out", false)) {
-            this.globalStats = new GlobalStats(
-                    super.getConfig().getString("version", "v" + this.getDescription().getVersion()));
-        }
 
         int pluginId = 4523;
         new Metrics(this, pluginId);
-    }
-
-    private boolean startRabbitMq() throws IOException, TimeoutException {
-        File file = new File(getDataFolder(), "rabbitmq.properties");
-        if (!file.exists()) {
-            this.saveResource("rabbitmq.properties", false);
-            return false;
-        }
-        if (!isConfigured(file)) {
-            return false;
-        }
-
-        this.rmqStorage = new RMQStorage(file);
-        return true;
-    }
-
-    private boolean isConfigured(File file) throws IOException {
-        Properties properties = new Properties();
-        try (FileReader reader = new FileReader(file)) {
-            properties.load(reader);
-            return properties.containsKey("rabbitmq.username")
-                    && !"configure-me".equals(properties.getProperty("rabbitmq.username"));
-        }
     }
 
     private void checkConversion() {
@@ -172,12 +119,8 @@ public class BukkitMain extends JavaPlugin {
 
     @Override
     public void onDisable() {
-        if (this.globalStats != null)
-            this.globalStats.shutdown();
         if (this.storage != null)
             this.storage.shutdown();
-        if (this.rmqStorage != null)
-            this.rmqStorage.shutdown();
     }
 
     @Override
