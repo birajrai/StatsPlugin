@@ -9,11 +9,11 @@ import io.reactivex.rxjava3.schedulers.Schedulers;
 import me.kiratdewas.stats.Util;
 import me.kiratdewas.stats.player.*;
 import me.kiratdewas.stats.storage.mysql.impl.*;
-import nl.lolmewn.stats.player.*;
+import me.kiratdewas.stats.player.*;
 import me.kiratdewas.stats.stat.Stat;
 import me.kiratdewas.stats.stat.StatManager;
 import me.kiratdewas.stats.storage.StorageManager;
-import nl.lolmewn.stats.storage.mysql.impl.*;
+import me.kiratdewas.stats.storage.mysql.impl.*;
 import me.kiratdewas.stats.storage.mysql.upgrade.MySQLUpgrader;
 
 import java.io.IOException;

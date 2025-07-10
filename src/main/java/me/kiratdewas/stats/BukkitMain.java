@@ -8,7 +8,7 @@ import net.md_5.bungee.api.chat.HoverEvent;
 import net.md_5.bungee.api.chat.TextComponent;
 import me.kiratdewas.stats.converters.Stats2;
 import me.kiratdewas.stats.listener.Playtime;
-import nl.lolmewn.stats.listener.bukkit.*;
+import me.kiratdewas.stats.listener.bukkit.*;
 import me.kiratdewas.stats.player.PlayerManager;
 import me.kiratdewas.stats.player.SimpleStatContainer;
 import me.kiratdewas.stats.player.StatsPlayer;

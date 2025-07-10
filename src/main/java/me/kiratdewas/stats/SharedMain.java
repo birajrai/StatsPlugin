@@ -2,7 +2,7 @@ package me.kiratdewas.stats;
 
 import me.kiratdewas.stats.stat.StatManager;
 import me.kiratdewas.stats.stat.impl.*;
-import nl.lolmewn.stats.stat.impl.*;
+import me.kiratdewas.stats.stat.impl.*;
 
 import java.util.logging.Logger;
 
