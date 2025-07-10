@@ -1,0 +1,8 @@
+name: Stats
+version: POM_VERSION
+main: nl.lolmewn.stats.BukkitMain
+author: Lolmewn
+api-version: 1.17
+commands:
+  stats:
+    description: The main Stats command
