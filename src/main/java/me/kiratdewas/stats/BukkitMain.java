@@ -6,7 +6,6 @@ import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.chat.ComponentBuilder;
 import net.md_5.bungee.api.chat.HoverEvent;
 import net.md_5.bungee.api.chat.TextComponent;
-import me.kiratdewas.stats.converters.Stats2;
 import me.kiratdewas.stats.listener.Playtime;
 import me.kiratdewas.stats.listener.bukkit.*;
 import me.kiratdewas.stats.player.PlayerManager;
@@ -48,8 +47,6 @@ public class BukkitMain extends JavaPlugin {
         super.getConfig().options().copyDefaults(true);
         super.saveConfig();
 
-        this.checkConversion();
-
         if (super.getConfig().getString("mysql.username", "username").equals("username")) {
             this.LOG.info("Stats is not yet configured");
             this.LOG.info("Stats has generated a config.yml file");
@@ -86,24 +83,6 @@ public class BukkitMain extends JavaPlugin {
 
         int pluginId = 4523;
         new Metrics(this, pluginId);
-    }
-
-    private void checkConversion() {
-        if (getConfig().contains("storage-version")) {
-            // Stats3
-        }
-        if (getConfig().contains("snapshots")) {
-            // Stats2
-            new Stats2(this.getConfig());
-        }
-        if (getConfig().contains("convertFrom")) {
-            if (getConfig().getInt("convertFrom") == 2) {
-                new Stats2(this.getConfig());
-            }
-            if (getConfig().getInt("convertFrom") == 3) {
-
-            }
-        }
     }
 
     private MySQLConfig getMySQLConfig() {
