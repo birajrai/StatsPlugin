@@ -45,13 +45,7 @@
             <scope>provided</scope>
         </dependency>
 
-        <dependency>
-            <groupId>org.spongepowered</groupId>
-            <artifactId>spongeapi</artifactId>
-            <version>7.4.0</version>
-            <type>jar</type>
-            <scope>provided</scope>
-        </dependency>
+        <!-- Removed SpongeAPI dependency, Sponge support is no longer present -->
 
         <dependency>
             <groupId>mysql</groupId>

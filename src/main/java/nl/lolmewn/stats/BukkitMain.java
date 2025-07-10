@@ -114,7 +114,8 @@ public class BukkitMain extends JavaPlugin {
         SharedMain.serverUuid = super.getConfig().getString("server-id");
         SharedMain.setDebug(super.getConfig().getBoolean("debug", false));
         if (!super.getConfig().getBoolean("global-stats-opt-out", false)) {
-            this.globalStats = new GlobalStats(super.getConfig().getString("version", "v" + this.getDescription().getVersion()));
+            this.globalStats = new GlobalStats(
+                    super.getConfig().getString("version", "v" + this.getDescription().getVersion()));
         }
 
         int pluginId = 4523;
@@ -139,7 +140,8 @@ public class BukkitMain extends JavaPlugin {
         Properties properties = new Properties();
         try (FileReader reader = new FileReader(file)) {
             properties.load(reader);
-            return properties.containsKey("rabbitmq.username") && !"configure-me".equals(properties.getProperty("rabbitmq.username"));
+            return properties.containsKey("rabbitmq.username")
+                    && !"configure-me".equals(properties.getProperty("rabbitmq.username"));
         }
     }
 
@@ -170,9 +172,12 @@ public class BukkitMain extends JavaPlugin {
 
     @Override
     public void onDisable() {
-        if (this.globalStats != null) this.globalStats.shutdown();
-        if (this.storage != null) this.storage.shutdown();
-        if (this.rmqStorage != null) this.rmqStorage.shutdown();
+        if (this.globalStats != null)
+            this.globalStats.shutdown();
+        if (this.storage != null)
+            this.storage.shutdown();
+        if (this.rmqStorage != null)
+            this.rmqStorage.shutdown();
     }
 
     @Override
@@ -182,11 +187,11 @@ public class BukkitMain extends JavaPlugin {
             return true;
         }
         sender.sendMessage(ChatColor.RED + "Your total stats");
-        PlayerManager.getInstance().getPlayer(((Player) sender).getUniqueId()).subscribe(player ->
-                sendStatistics(sender, player), err -> {
-            sender.sendMessage(ChatColor.RED + "An Unknown error occurred!");
-            this.LOG.warning("Command error: " + err);
-        });
+        PlayerManager.getInstance().getPlayer(((Player) sender).getUniqueId())
+                .subscribe(player -> sendStatistics(sender, player), err -> {
+                    sender.sendMessage(ChatColor.RED + "An Unknown error occurred!");
+                    this.LOG.warning("Command error: " + err);
+                });
         return true;
     }
 
@@ -202,10 +207,11 @@ public class BukkitMain extends JavaPlugin {
             statValue.setColor(ChatColor.GOLD);
             statValue.setHoverEvent(new HoverEvent(
                     HoverEvent.Action.SHOW_TEXT,
-                    new ComponentBuilder(getValuesFor("world", player.getStats(stat).getSimpleStatContainer()).entrySet().stream().map(
-                            entry -> "In " + getWorldName(entry.getKey()) + ": " + stat.format(entry.getValue())
-                    ).reduce((s, s2) -> s + "\n" + s2).orElse("No data recorded yet!")).create()
-            ));
+                    new ComponentBuilder(getValuesFor("world", player.getStats(stat).getSimpleStatContainer())
+                            .entrySet().stream().map(
+                                    entry -> "In " + getWorldName(entry.getKey()) + ": "
+                                            + stat.format(entry.getValue()))
+                            .reduce((s, s2) -> s + "\n" + s2).orElse("No data recorded yet!")).create()));
             sender.spigot().sendMessage(statMessage, colon, statValue);
         });
     }
@@ -225,7 +231,8 @@ public class BukkitMain extends JavaPlugin {
             if (world != null) {
                 return world.getName();
             }
-        } catch (IllegalArgumentException ignored) {}
+        } catch (IllegalArgumentException ignored) {
+        }
         return "Unknown world";
     }
 
