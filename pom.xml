@@ -4,7 +4,7 @@
     xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>nl.lolmewn.stats</groupId>
+    <groupId>me.kiratdewas.stats</groupId>
     <artifactId>Stats</artifactId>
     <version>5.3.7</version>
 
@@ -30,22 +30,13 @@
     </repositories>
 
     <dependencies>
-        <!--
-        <dependency>
-            <groupId>org.spigotmc</groupId>
-            <artifactId>spigot-api</artifactId>
-            <version>1.18.1-R0.1-SNAPSHOT</version>
-            <scope>provided</scope>
-        </dependency>
-        -->
+
         <dependency>
             <groupId>io.papermc.paper</groupId>
             <artifactId>paper-api</artifactId>
             <version>1.21.7-R0.1-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
-
-        <!-- Removed SpongeAPI dependency, Sponge support is no longer present -->
 
         <dependency>
             <groupId>mysql</groupId>
@@ -64,8 +55,6 @@
             <artifactId>rxjava3-extensions</artifactId>
             <version>3.1.1</version>
         </dependency>
-
-        <!-- Removed rxjava3-debug dependency, not needed -->
 
         <dependency>
             <groupId>com.zaxxer</groupId>
@@ -99,13 +88,11 @@
                     <relocations>
                         <relocation>
                             <pattern>org.bstats</pattern>
-                            <!-- Replace this with your package! -->
-                            <shadedPattern>nl.lolmewn.stats</shadedPattern>
+                            <shadedPattern>me.kiratdewas.stats</shadedPattern>
                         </relocation>
                         <relocation>
                             <pattern>net.md-5</pattern>
-                            <!-- Replace this with your package! -->
-                            <shadedPattern>nl.lolmewn.stats</shadedPattern>
+                            <shadedPattern>me.kiratdewas.stats</shadedPattern>
                         </relocation>
                     </relocations>
                 </configuration>

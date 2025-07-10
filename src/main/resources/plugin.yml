@@ -1,7 +1,7 @@
 name: Stats
 version: POM_VERSION
-main: nl.lolmewn.stats.BukkitMain
-author: Lolmewn
+main: me.kiratdewas.stats.BukkitMain
+author: KiratDewas
 api-version: 1.17
 commands:
   stats:
