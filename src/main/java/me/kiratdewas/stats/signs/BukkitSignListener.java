@@ -30,7 +30,7 @@ public class BukkitSignListener implements Listener {
         if (!event.getLine(0).equalsIgnoreCase("[stats]")) {
             return;
         }
-        if (!event.getPlayer().hasPermission("stats.sign.place")) {
+        if (!event.getPlayer().hasPermission("statsreloaded.sign.place")) {
             event.getPlayer().sendMessage(ChatColor.RED + "No permissions");
             cancelEvent(event);
             return;
@@ -41,7 +41,7 @@ public class BukkitSignListener implements Listener {
         progress.location = event.getBlock().getLocation();
         this.installers.put(event.getPlayer().getUniqueId(), progress);
         event.getPlayer().sendMessage(ChatColor.GOLD + "=-=-=-=-=-=-=-=-=-=-=-=-=-=");
-        event.getPlayer().sendMessage("Setting up a new Stats sign!");
+        event.getPlayer().sendMessage("Setting up a new StatsReloaded sign!");
         event.getPlayer().sendMessage("Please tell me what kind of stats you want to display");
         event.getPlayer().sendMessage("You can simply type it into the chat ");
         event.getPlayer().sendMessage(Arrays.toString(StatsSignStatMode.values()).substring(1)
@@ -54,11 +54,11 @@ public class BukkitSignListener implements Listener {
         Optional<StatsSign> sign = SignManager.getInstance().getSignAt(event.getBlock().getWorld().getUID(), event.getBlock().getX(),
                 event.getBlock().getY(), event.getBlock().getZ());
         if (!sign.isPresent()) return;
-        if (event.getPlayer().hasPermission("stats.sign.break")) {
+        if (event.getPlayer().hasPermission("statsreloaded.sign.break")) {
             if (SignManager.getInstance().removeSign(sign.get())) {
-                event.getPlayer().sendMessage(ChatColor.GOLD + "Stats sign removed!");
+                event.getPlayer().sendMessage(ChatColor.GOLD + "StatsReloaded sign removed!");
             } else {
-                event.getPlayer().sendMessage(ChatColor.RED + "Tried to remove Stats sign but something went wrong");
+                event.getPlayer().sendMessage(ChatColor.RED + "Tried to remove StatsReloaded sign but something went wrong");
                 event.getPlayer().sendMessage(ChatColor.RED + "Check the console to see what went wrong");
             }
         } else {

@@ -65,7 +65,7 @@ public class MySQLUpgrader {
                 PreparedStatement st = con.prepareStatement("SELECT version FROM stats_system");
                 ResultSet set = st.executeQuery();
                 if (!set.next()) {
-                    this.LOG.severe("[ERR] Could not find latest version of Stats database, assuming it was deleted...");
+                    this.LOG.severe("[ERR] Could not find latest version of StatsReloaded database, assuming it was deleted...");
                     return 0;
                 }
                 return set.getInt("version");

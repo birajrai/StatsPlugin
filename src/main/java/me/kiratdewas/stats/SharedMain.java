@@ -56,7 +56,7 @@ public class SharedMain {
 
     public static void debug(String message) {
         if (isDebug) {
-            LOG.info("[StatsDebug] " + message);
+            LOG.info("[StatsReloadedDebug] " + message);
         }
     }
 }

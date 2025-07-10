@@ -91,7 +91,7 @@ public abstract class StatsSign implements Runnable {
     }
 
     private void update(StatsPlayer player, Stat stat) {
-        String line1 = "[Stats]";
+        String line1 = "[StatsReloaded]";
         String line2 = stat != null ? stat.getName() : "Loading...";
         String line3 = player != null ? this.getPlayerName(player.getUuid()) : "Loading...";
         String line4 = stat != null ? stat.shortFormat(this.value) : "Loading...";
