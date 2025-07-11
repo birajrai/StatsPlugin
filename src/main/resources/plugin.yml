@@ -1,6 +1,6 @@
 name: StatsReloaded
 version: POM_VERSION
-main: me.kiratdewas.stats.BukkitMain
+main: me.kiratdewas.StatsReloaded
 author: KiratDewas
 api-version: 1.17
 commands:
