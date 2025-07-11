@@ -126,6 +126,8 @@ jobs:
 
       - name: Get Release Upload URL
         id: get_upload_url
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           RELEASE_ID=$(gh api repos/${{ github.repository }}/releases/latest --jq '.id')
           UPLOAD_URL=$(gh api repos/${{ github.repository }}/releases/$RELEASE_ID --jq '.upload_url' | sed 's/{?name,label}//')
