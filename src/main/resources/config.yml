@@ -4,9 +4,9 @@ database:
   mysql:
     host: localhost
     port: 3306
-    database: statsreloaded
+    database: stats
     username: root
     password: ""
   mongodb:
     uri: mongodb://localhost:27017
-    database: statsreloaded
+    database: stats

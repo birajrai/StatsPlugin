@@ -6,7 +6,7 @@ import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
-import me.kiratdewas.StatsReloadedPlugin;
+import me.kiratdewas.StatsPlugin;
 import org.bson.Document;
 
 import java.io.File;
@@ -14,11 +14,11 @@ import java.io.IOException;
 import java.util.logging.Level;
 
 public class MongoDB {
-    private final StatsReloadedPlugin.MongoConfig config;
+    private final StatsPlugin.MongoConfig config;
     private final ObjectMapper objectMapper = new ObjectMapper();
-    private final StatsReloadedPlugin plugin;
+    private final StatsPlugin plugin;
 
-    public MongoDB(StatsReloadedPlugin plugin, StatsReloadedPlugin.MongoConfig config) {
+    public MongoDB(StatsPlugin plugin, StatsPlugin.MongoConfig config) {
         this.plugin = plugin;
         this.config = config;
     }

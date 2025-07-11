@@ -32,13 +32,13 @@ jobs:
         run: mkdir -p builds
 
       - name: Copy JAR to builds directory
-        run: cp target/StatsReloaded-*.jar builds/statsreloaded.jar
+        run: cp target/Stats-*.jar builds/stats.jar
 
       - name: Upload JAR artifact
         uses: actions/upload-artifact@v4
         with:
-          name: StatsReloaded-plugin
-          path: builds/statsreloaded.jar
+          name: Stats-plugin
+          path: builds/stats.jar
           retention-days: 30
 
       - name: Upload to releases (on release)
@@ -48,8 +48,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ github.event.release.upload_url }}
-          asset_path: ./builds/statsreloaded.jar
-          asset_name: StatsReloaded-${{ github.event.release.tag_name }}.jar
+          asset_path: ./builds/stats.jar
+          asset_name: Stats-${{ github.event.release.tag_name }}.jar
           asset_content_type: application/java-archive
 
   create-release:
@@ -69,7 +69,7 @@ jobs:
       - name: Download build artifact
         uses: actions/download-artifact@v4
         with:
-          name: StatsReloaded-plugin
+          name: Stats-plugin
           path: builds/
 
       - name: Generate release notes
@@ -104,7 +104,7 @@ jobs:
           $COMMITS
 
           ## Download
-          Download the latest version of StatsReloaded plugin."
+          Download the latest version of Stats plugin."
 
           echo "release_notes<<EOF" >> $GITHUB_OUTPUT
           echo "$RELEASE_NOTES" >> $GITHUB_OUTPUT
@@ -119,7 +119,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: ${{ steps.release_notes.outputs.new_version }}
-          release_name: StatsReloaded ${{ steps.release_notes.outputs.new_version }}
+          release_name: Stats ${{ steps.release_notes.outputs.new_version }}
           body: ${{ steps.release_notes.outputs.release_notes }}
           draft: false
           prerelease: false
@@ -128,4 +128,4 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release upload ${{ steps.release_notes.outputs.new_version }} ./builds/statsreloaded.jar --repo ${{ github.repository }}
+          gh release upload ${{ steps.release_notes.outputs.new_version }} ./builds/stats.jar --repo ${{ github.repository }}

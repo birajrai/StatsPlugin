@@ -2,7 +2,7 @@ package me.kiratdewas.database;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import me.kiratdewas.StatsReloadedPlugin;
+import me.kiratdewas.StatsPlugin;
 
 import java.io.File;
 import java.io.IOException;
@@ -13,11 +13,11 @@ import java.sql.SQLException;
 import java.util.logging.Level;
 
 public class MySQL {
-    private final StatsReloadedPlugin.MySQLConfig config;
+    private final StatsPlugin.MySQLConfig config;
     private final ObjectMapper objectMapper = new ObjectMapper();
-    private final StatsReloadedPlugin plugin;
+    private final StatsPlugin plugin;
 
-    public MySQL(StatsReloadedPlugin plugin, StatsReloadedPlugin.MySQLConfig config) {
+    public MySQL(StatsPlugin plugin, StatsPlugin.MySQLConfig config) {
         this.plugin = plugin;
         this.config = config;
     }

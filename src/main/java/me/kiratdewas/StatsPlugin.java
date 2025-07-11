@@ -4,11 +4,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
-import me.kiratdewas.command.StatsReloadedCommand;
+import me.kiratdewas.command.StatsCommand;
 import me.kiratdewas.database.Core;
 import me.kiratdewas.config.ConfigLoader;
 
-public class StatsReloadedPlugin extends JavaPlugin {
+public class StatsPlugin extends JavaPlugin {
     private String dbType;
     private MySQLConfig mysqlConfig;
     private MongoConfig mongoConfig;
@@ -19,7 +19,7 @@ public class StatsReloadedPlugin extends JavaPlugin {
     public void onEnable() {
         saveDefaultConfig();
         loadConfig();
-        getLogger().info("StatsReloaded enabled. Importing stats...");
+        getLogger().info("Stats enabled. Importing stats...");
         dbCore = new Core(this);
         importStats();
 
@@ -28,7 +28,7 @@ public class StatsReloadedPlugin extends JavaPlugin {
         getServer().getScheduler().runTaskTimer(this, this::importStats, intervalTicks, intervalTicks);
 
         // Register command executor
-        getCommand("statsreloaded").setExecutor(new StatsReloadedCommand(this));
+        getCommand("stats").setExecutor(new StatsCommand(this));
     }
 
     public void loadConfig() {

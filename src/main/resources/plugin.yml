@@ -1,11 +1,11 @@
-name: StatsReloaded
-version: POM_VERSION
-main: me.kiratdewas.StatsReloadedPlugin
+name: {name}
+version: {version}
+main: me.kiratdewas.StatsPlugin
 author: KiratDewas
 api-version: 1.21
 commands:
-  statsreloaded:
-    description: The main StatsReloaded command
+  stats:
+    description: The main Stats command
 
 libraries:
   - org.mongodb:mongodb-driver-sync:4.11.1

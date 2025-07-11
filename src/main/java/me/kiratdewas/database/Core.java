@@ -1,15 +1,15 @@
 package me.kiratdewas.database;
 
-import me.kiratdewas.StatsReloadedPlugin;
+import me.kiratdewas.StatsPlugin;
 import java.io.File;
 
 public class Core {
-    private final StatsReloadedPlugin plugin;
+    private final StatsPlugin plugin;
     private final String dbType;
     private final MySQL mySQL;
     private final MongoDB mongoDB;
 
-    public Core(StatsReloadedPlugin plugin) {
+    public Core(StatsPlugin plugin) {
         this.plugin = plugin;
         this.dbType = plugin.getDbType();
         this.mySQL = dbType.equalsIgnoreCase("mysql") ? new MySQL(plugin, plugin.getMySQLConfig()) : null;

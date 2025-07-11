@@ -1,7 +1,7 @@
 package me.kiratdewas.command;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import me.kiratdewas.StatsReloadedPlugin;
+import me.kiratdewas.StatsPlugin;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -9,11 +9,11 @@ import org.bukkit.command.CommandSender;
 
 import java.io.File;
 
-public class StatsReloadedCommand implements CommandExecutor {
-    private final StatsReloadedPlugin plugin;
+public class StatsCommand implements CommandExecutor {
+    private final StatsPlugin plugin;
     private final ObjectMapper objectMapper;
 
-    public StatsReloadedCommand(StatsReloadedPlugin plugin) {
+    public StatsCommand(StatsPlugin plugin) {
         this.plugin = plugin;
         this.objectMapper = new ObjectMapper();
     }
@@ -25,20 +25,20 @@ public class StatsReloadedCommand implements CommandExecutor {
                 plugin.reloadConfig();
                 plugin.loadConfig();
                 plugin.importStats();
-                sender.sendMessage("[StatsReloaded] Config and stats reloaded.");
+                sender.sendMessage("[Stats] Config and stats reloaded.");
                 return true;
             } else if (args[0].equalsIgnoreCase("update") && args.length > 1) {
                 String playerName = args[1];
                 boolean success = importPlayerStats(playerName);
                 if (success) {
-                    sender.sendMessage("[StatsReloaded] Updated stats for " + playerName);
+                    sender.sendMessage("[Stats] Updated stats for " + playerName);
                 } else {
-                    sender.sendMessage("[StatsReloaded] Could not find stats for " + playerName);
+                    sender.sendMessage("[Stats] Could not find stats for " + playerName);
                 }
                 return true;
             }
         }
-        sender.sendMessage("[StatsReloaded] Usage: /statsreloaded reload | /statsreloaded update <playername>");
+        sender.sendMessage("[Stats] Usage: /stats reload | /stats update <playername>");
         return true;
     }
 
@@ -64,4 +64,4 @@ public class StatsReloadedCommand implements CommandExecutor {
             return false;
         return plugin.getDbCore().upsertPlayerStats(file, uuid.toString());
     }
-}
+} 
