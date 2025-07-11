@@ -1,0 +1,53 @@
+name: Build and Package Plugin
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  release:
+    types: [ published ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      SR_SECRET: ${{ secrets.SR_SECRET }}
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up JDK 21
+      uses: actions/setup-java@v4
+      with:
+        java-version: '21'
+        distribution: 'temurin'
+        cache: maven
+        
+    - name: Build with Maven
+      run: mvn clean package
+      
+    - name: Create builds directory
+      run: mkdir -p builds
+      
+    - name: Copy JAR to builds directory
+      run: cp target/StatsReloaded-*.jar builds/here.jar
+      
+    - name: Upload JAR artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: StatsReloaded-plugin
+        path: builds/here.jar
+        retention-days: 30
+        
+    - name: Upload to releases (on release)
+      if: github.event_name == 'release'
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ github.event.release.upload_url }}
+        asset_path: ./builds/here.jar
+        asset_name: StatsReloaded-${{ github.event.release.tag_name }}.jar
+        asset_content_type: application/java-archive 
