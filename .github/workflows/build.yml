@@ -72,14 +72,27 @@ jobs:
     - name: Generate release notes
       id: release_notes
       run: |
-        # Get the latest tag
-        LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
-        
-        # Get commits since last tag
-        COMMITS=$(git log --pretty=format:"- %s" ${LATEST_TAG}..HEAD)
+        # Check if there are any tags
+        if git describe --tags --abbrev=0 >/dev/null 2>&1; then
+          # Get the latest tag
+          LATEST_TAG=$(git describe --tags --abbrev=0)
+          
+          # Get commits since last tag
+          COMMITS=$(git log --pretty=format:"- %s" ${LATEST_TAG}..HEAD)
+          
+          # Generate new version (increment patch version)
+          CURRENT_VERSION=$(echo $LATEST_TAG | sed 's/v//')
+          IFS='.' read -ra VERSION_PARTS <<< "$CURRENT_VERSION"
+          NEW_PATCH=$((VERSION_PARTS[2] + 1))
+          NEW_VERSION="v${VERSION_PARTS[0]}.${VERSION_PARTS[1]}.$NEW_PATCH"
+        else
+          # No tags exist, start with v1.0.0
+          COMMITS=$(git log --pretty=format:"- %s")
+          NEW_VERSION="v1.0.0"
+        fi
         
         if [ -z "$COMMITS" ]; then
-          COMMITS="- No new commits since last release"
+          COMMITS="- Initial release"
         fi
         
         # Create release notes
@@ -94,11 +107,6 @@ jobs:
         echo "$RELEASE_NOTES" >> $GITHUB_OUTPUT
         echo "EOF" >> $GITHUB_OUTPUT
         
-        # Generate new version (increment patch version)
-        CURRENT_VERSION=$(echo $LATEST_TAG | sed 's/v//')
-        IFS='.' read -ra VERSION_PARTS <<< "$CURRENT_VERSION"
-        NEW_PATCH=$((VERSION_PARTS[2] + 1))
-        NEW_VERSION="v${VERSION_PARTS[0]}.${VERSION_PARTS[1]}.$NEW_PATCH"
         echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
       
     - name: Create Release
