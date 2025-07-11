@@ -14,6 +14,8 @@ public class StatsPlugin extends JavaPlugin {
     private MongoConfig mongoConfig;
     private final ObjectMapper objectMapper = new ObjectMapper();
     private Core dbCore;
+    private boolean cmiCompatible;
+    private boolean luckPermsCompatible;
 
     @Override
     public void onEnable() {
@@ -35,6 +37,8 @@ public class StatsPlugin extends JavaPlugin {
         this.saveDefaultConfig();
         org.bukkit.configuration.file.FileConfiguration config = getConfig();
         dbType = ConfigLoader.getDbType(config);
+        cmiCompatible = ConfigLoader.isCmiCompatible(config);
+        luckPermsCompatible = ConfigLoader.isLuckPermsCompatible(config);
         if ("mysql".equalsIgnoreCase(dbType)) {
             mysqlConfig = ConfigLoader.loadMySQLConfig(config);
         } else if ("mongodb".equalsIgnoreCase(dbType)) {
@@ -70,6 +74,14 @@ public class StatsPlugin extends JavaPlugin {
 
     public Core getDbCore() {
         return dbCore;
+    }
+
+    public boolean isCmiCompatible() {
+        return cmiCompatible;
+    }
+
+    public boolean isLuckPermsCompatible() {
+        return luckPermsCompatible;
     }
 
     public static class MySQLConfig {

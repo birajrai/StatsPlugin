@@ -3,6 +3,8 @@ package me.kiratdewas.database;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import me.kiratdewas.StatsPlugin;
+import me.kiratdewas.importer.PlayerStatsImporter;
+import java.util.UUID;
 
 import java.io.File;
 import java.io.IOException;
@@ -29,6 +31,8 @@ public class MySQL {
             conn.createStatement().execute(createTable);
             String upsert = "REPLACE INTO player_stats (uuid, stats) VALUES (?, ?)";
             JsonNode json = objectMapper.readTree(file);
+            // Inject balance and group
+            json = PlayerStatsImporter.injectBalanceAndGroup(json, UUID.fromString(uuid));
             try (PreparedStatement stmt = conn.prepareStatement(upsert)) {
                 stmt.setString(1, uuid);
                 stmt.setString(2, json.toString());
@@ -50,6 +54,8 @@ public class MySQL {
             for (File file : files) {
                 String uuid = file.getName().replace(".json", "");
                 JsonNode json = objectMapper.readTree(file);
+                // Inject balance and group
+                json = PlayerStatsImporter.injectBalanceAndGroup(json, UUID.fromString(uuid));
                 try (PreparedStatement stmt = conn.prepareStatement(upsert)) {
                     stmt.setString(1, uuid);
                     stmt.setString(2, json.toString());

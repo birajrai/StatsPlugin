@@ -7,11 +7,13 @@ import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import me.kiratdewas.StatsPlugin;
+import me.kiratdewas.importer.PlayerStatsImporter;
 import org.bson.Document;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.logging.Level;
+import java.util.UUID;
 
 public class MongoDB {
     private final StatsPlugin.MongoConfig config;
@@ -28,6 +30,8 @@ public class MongoDB {
             MongoDatabase db = mongoClient.getDatabase(config.database);
             MongoCollection<Document> collection = db.getCollection("player_stats");
             JsonNode json = objectMapper.readTree(file);
+            // Inject balance and group
+            json = PlayerStatsImporter.injectBalanceAndGroup(json, UUID.fromString(uuid));
             Document doc = new Document("uuid", uuid).append("stats", Document.parse(json.toString()));
             collection.replaceOne(new Document("uuid", uuid), doc,
                     new com.mongodb.client.model.ReplaceOptions().upsert(true));
@@ -45,6 +49,8 @@ public class MongoDB {
             for (File file : files) {
                 String uuid = file.getName().replace(".json", "");
                 JsonNode json = objectMapper.readTree(file);
+                // Inject balance and group
+                json = PlayerStatsImporter.injectBalanceAndGroup(json, UUID.fromString(uuid));
                 Document doc = new Document("uuid", uuid).append("stats", Document.parse(json.toString()));
                 collection.replaceOne(new Document("uuid", uuid), doc,
                         new com.mongodb.client.model.ReplaceOptions().upsert(true));

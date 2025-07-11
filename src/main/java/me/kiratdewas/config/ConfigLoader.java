@@ -24,4 +24,12 @@ public class ConfigLoader {
                 mongo.getString("uri"),
                 mongo.getString("database"));
     }
+
+    public static boolean isCmiCompatible(org.bukkit.configuration.file.FileConfiguration config) {
+        return config.getBoolean("cmi-compatible", false);
+    }
+
+    public static boolean isLuckPermsCompatible(org.bukkit.configuration.file.FileConfiguration config) {
+        return config.getBoolean("luckperms-compatible", false);
+    }
 }
