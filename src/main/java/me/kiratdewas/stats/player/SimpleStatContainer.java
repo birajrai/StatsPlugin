@@ -22,7 +22,10 @@ public class SimpleStatContainer {
     private void handleUpdate(StatTimeEntry entry) {
         Map<String, Object> collect = this.parent.getStat().getMetaData().stream().filter(StatMetaData::isGroupable)
                 .map(StatMetaData::getId)
-                .collect(Collectors.toMap(Function.identity(), o -> entry.getMetadata().get(o)));
+                .collect(Collectors.toMap(Function.identity(), o -> {
+                    Object val = entry.getMetadata().get(o);
+                    return val == null ? "UNKNOWN" : val;
+                }));
         this.values.merge(collect, entry.getAmount(), Double::sum);
     }
 
@@ -45,6 +48,7 @@ public class SimpleStatContainer {
     }
 
     public void removeWhere(String key, Object value) {
-        this.values.entrySet().removeIf(entry -> entry.getKey().containsKey(key) && entry.getKey().get(key).equals(value));
+        this.values.entrySet()
+                .removeIf(entry -> entry.getKey().containsKey(key) && entry.getKey().get(key).equals(value));
     }
 }

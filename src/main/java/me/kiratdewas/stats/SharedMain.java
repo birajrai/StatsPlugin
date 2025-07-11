@@ -33,6 +33,7 @@ public class SharedMain {
         StatManager.getInstance().addStat(new LastJoinStat());
         StatManager.getInstance().addStat(new LastQuitStat());
         StatManager.getInstance().addStat(new MoveStat());
+        StatManager.getInstance().addStat(new JumpsStat());
         StatManager.getInstance().addStat(new PVPStat());
         StatManager.getInstance().addStat(new PVPStreakStat());
         StatManager.getInstance().addStat(new ShearStat());

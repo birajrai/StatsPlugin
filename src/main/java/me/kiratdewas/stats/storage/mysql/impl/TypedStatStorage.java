@@ -30,33 +30,43 @@ public class TypedStatStorage implements StatMySQLHandler {
     @Override
     public Collection<StatTimeEntry> loadEntries(Connection con, UUID uuid) throws SQLException {
         List<StatTimeEntry> entries = new ArrayList<>();
-        try (PreparedStatement st = con.prepareStatement("SELECT type, world_id, amount, last_updated " +
-                "FROM " + getTableName() + " t JOIN stats_players p ON p.id=t.player_id WHERE p.uuid=UNHEX(?)")) {
-            st.setString(1, uuid.toString().replace("-", ""));
+        try (PreparedStatement st = con.prepareStatement("SELECT type, world_uuid, amount, last_updated " +
+                "FROM " + getTableName() + " WHERE player_uuid=?")) {
+            st.setString(1, uuid.toString());
             ResultSet set = st.executeQuery();
             while (set != null && set.next()) {
-                Optional<UUID> worldUUID = MySQLWorldManager.getInstance().getWorld(set.getInt("world_id"));
-                if (!worldUUID.isPresent()) {
-                    throw new IllegalStateException("Found world id that is not existing: " + set.getInt("world_id"));
-                }
+                String worldUuidStr = set.getString("world_uuid");
                 entries.add(new StatTimeEntry(
                         set.getTimestamp("last_updated").getTime(), set.getDouble("amount"),
-                        Util.of("world", worldUUID.get().toString(), "type", set.getString("type")
-                        )));
+                        Util.of("world", worldUuidStr, "type", set.getString("type"))));
             }
         }
         return entries;
     }
 
     @Override
-    public void storeEntry(Connection con, MySQLStatsPlayer player, StatsContainer container, StatTimeEntry entry) throws SQLException {
-        try (PreparedStatement st = con.prepareStatement("INSERT INTO " + getTableName() + " (player_id, world_id, type, amount) " +
-                "VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE amount=amount+VALUES(amount)")) {
-            st.setInt(1, player.getDbId());
-            st.setInt(2, Util.getWorldId(entry.getMetadata().get("world").toString()).orElseThrow(IllegalStateException::new));
+    public void storeEntry(Connection con, MySQLStatsPlayer player, StatsContainer container, StatTimeEntry entry)
+            throws SQLException {
+        try (PreparedStatement st = con
+                .prepareStatement("INSERT INTO " + getTableName() + " (player_uuid, world_uuid, type, amount) " +
+                        "VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE amount=amount+VALUES(amount)")) {
+            st.setString(1, player.getUuid().toString());
+            st.setString(2, entry.getMetadata().get("world").toString());
             st.setObject(3, entry.getMetadata().get("type"));
             st.setDouble(4, entry.getAmount());
             st.execute();
+        }
+    }
+
+    public void deleteEntriesForPlayerType(Connection con, UUID playerUuid, String worldUuid, String type)
+            throws SQLException {
+        String sql = "DELETE FROM " + getTableName()
+                + " WHERE player_uuid=? AND world_uuid=? AND type=?";
+        try (PreparedStatement st = con.prepareStatement(sql)) {
+            st.setString(1, playerUuid.toString());
+            st.setString(2, worldUuid);
+            st.setString(3, type);
+            st.executeUpdate();
         }
     }
 }

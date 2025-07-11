@@ -19,6 +19,8 @@ import me.kiratdewas.stats.storage.mysql.MySQLConfig;
 import me.kiratdewas.stats.storage.mysql.MySQLStorage;
 import me.kiratdewas.stats.storage.mysql.MySQLWorldManager;
 import org.bstats.bukkit.Metrics;
+import org.bukkit.Bukkit;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -68,6 +70,8 @@ public class BukkitMain extends JavaPlugin {
             return;
         }
 
+        boolean importVanillaStats = super.getConfig().getBoolean("import-vanilla-stats", true);
+        boolean trackLiveStats = super.getConfig().getBoolean("track-live-stats", true);
         new WorldListener(this, this.worldManager);
         new BlockBreak(this);
         new BlockPlace(this);
@@ -75,7 +79,9 @@ public class BukkitMain extends JavaPlugin {
         new EntityDeath(this);
         new PlayerMove(this);
         new Playtime();
-        new SimpleStatsListener(this);
+        if (trackLiveStats) {
+            new SimpleStatsListener(this, importVanillaStats);
+        }
         new BukkitSignListener(this);
 
         SharedMain.serverUuid = super.getConfig().getString("server-id");
@@ -100,6 +106,25 @@ public class BukkitMain extends JavaPlugin {
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+        if (args.length >= 2 && args[0].equalsIgnoreCase("import")) {
+            if (!sender.isOp() && !sender.hasPermission("statsreloaded.import")) {
+                sender.sendMessage(ChatColor.RED + "You do not have permission to use this command.");
+                return true;
+            }
+            String playerName = args[1];
+            OfflinePlayer target = Bukkit.getOfflinePlayer(playerName);
+            if (target == null || target.getUniqueId() == null) {
+                sender.sendMessage(ChatColor.RED + "Player not found: " + playerName);
+                return true;
+            }
+            boolean result = SimpleStatsListener.forceImportVanillaStats(this, target.getUniqueId());
+            if (result) {
+                sender.sendMessage(ChatColor.GREEN + "Successfully imported vanilla stats for " + playerName);
+            } else {
+                sender.sendMessage(ChatColor.RED + "Failed to import vanilla stats for " + playerName + ". See console for details.");
+            }
+            return true;
+        }
         if (!(sender instanceof Player)) {
             sender.sendMessage("Player only");
             return true;

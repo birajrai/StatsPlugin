@@ -21,6 +21,7 @@ import java.util.logging.Logger;
 public class SignManager {
 
     private static SignManager signManager;
+
     public static SignManager getInstance() {
         return signManager;
     }
@@ -51,16 +52,17 @@ public class SignManager {
 
     private void loadSigns() throws SQLException {
         try (Connection con = this.storage.getConnection()) {
-            ResultSet set = con.createStatement().executeQuery("SELECT *,HEX(id) as uuid,HEX(world) AS worldUuid FROM stats_signs");
+            ResultSet set = con.createStatement().executeQuery("SELECT * FROM stats_signs");
             while (set != null && set.next()) {
-                Optional<UUID> uuid = Util.generateUUID(set.getString("uuid"));
-                Optional<UUID> worldUUID = Util.generateUUID(set.getString("worldUuid"));
+                Optional<UUID> uuid = Util.generateUUID(set.getString("id"));
+                Optional<UUID> worldUUID = Util.generateUUID(set.getString("world_uuid"));
                 if (!uuid.isPresent()) {
-                    this.LOG.severe("Could not load some sign, ID is not a valid uuid: " + set.getString("worldUuid"));
+                    this.LOG.severe("Could not load some sign, ID is not a valid uuid: " + set.getString("id"));
                     continue;
                 }
                 if (!worldUUID.isPresent()) {
-                    this.LOG.severe("Could not load some sign, ID is not a valid uuid: " + set.getString("uuid"));
+                    this.LOG.severe(
+                            "Could not load some sign, world_uuid is not a valid uuid: " + set.getString("world_uuid"));
                     continue;
                 }
                 StatsSign sign = new BukkitStatsSign(plugin,
@@ -73,17 +75,18 @@ public class SignManager {
 
     private void saveSign(StatsSign sign) {
         try (Connection con = this.storage.getConnection()) {
-            PreparedStatement update = con.prepareStatement("UPDATE stats_signs SET world=UNHEX(?), x=?, y=?, z=?, spec=? WHERE id=UNHEX(?)");
-            update.setString(1, sign.getWorld().toString().replace("-", ""));
+            PreparedStatement update = con
+                    .prepareStatement("UPDATE stats_signs SET world_uuid=?, x=?, y=?, z=?, spec=? WHERE id=?");
+            update.setString(1, sign.getWorld().toString());
             update.setInt(2, sign.getX());
             update.setInt(3, sign.getY());
             update.setInt(4, sign.getZ());
             update.setString(5, this.gson.toJson(sign.getSpec()));
-            update.setString(6, sign.getId().toString().replace("-", ""));
+            update.setString(6, sign.getId().toString());
             if (update.executeUpdate() == 0) {
-                PreparedStatement insert = con.prepareStatement("INSERT INTO stats_signs VALUES (UNHEX(?), UNHEX(?), ?, ?, ?, ?)");
-                insert.setString(1, sign.getId().toString().replace("-", ""));
-                insert.setString(2, sign.getWorld().toString().replace("-", ""));
+                PreparedStatement insert = con.prepareStatement("INSERT INTO stats_signs VALUES (?, ?, ?, ?, ?, ?)");
+                insert.setString(1, sign.getId().toString());
+                insert.setString(2, sign.getWorld().toString());
                 insert.setInt(3, sign.getX());
                 insert.setInt(4, sign.getY());
                 insert.setInt(5, sign.getZ());
@@ -106,8 +109,8 @@ public class SignManager {
         statsSign.stop();
         this.signs.remove(statsSign.getId());
         try (Connection con = this.storage.getConnection()) {
-            PreparedStatement delete = con.prepareStatement("DELETE FROM stats_signs WHERE id=UNHEX(?)");
-            delete.setString(1, statsSign.getId().toString().replace("-", ""));
+            PreparedStatement delete = con.prepareStatement("DELETE FROM stats_signs WHERE id=?");
+            delete.setString(1, statsSign.getId().toString());
             delete.execute();
             return true;
         } catch (SQLException e) {

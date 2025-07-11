@@ -2,3 +2,6 @@ mysql:
   url: jdbc:mysql://localhost:3306/statsreloaded
   username: username
   password: password
+
+import-vanilla-stats: true
+track-live-stats: true

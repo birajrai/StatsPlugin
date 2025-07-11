@@ -26,7 +26,7 @@ public class WorldListener implements Listener {
 
     @EventHandler()
     public void loadWorld(WorldLoadEvent event) {
-        this.worldManager.addWorld(event.getWorld().getUID(), event.getWorld().getName());
+        this.worldManager.setWorld(event.getWorld().getUID(), event.getWorld().getName());
         this.setWeather(event.getWorld().getUID(), event.getWorld().isThundering());
     }
 

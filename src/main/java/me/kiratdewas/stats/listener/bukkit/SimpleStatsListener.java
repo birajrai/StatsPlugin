@@ -26,27 +26,40 @@ import org.bukkit.event.player.*;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.MerchantInventory;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+
 import java.util.Arrays;
 import java.util.Map;
 import java.util.UUID;
 
 import static org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
+import me.kiratdewas.stats.storage.mysql.impl.TypedStatStorage;
+import me.kiratdewas.stats.player.MySQLStatsPlayer;
 
 public class SimpleStatsListener implements Listener {
 
     private final BukkitMain plugin;
+    private final boolean importVanillaStats;
 
-    public SimpleStatsListener(BukkitMain plugin) {
+    public SimpleStatsListener(BukkitMain plugin, boolean importVanillaStats) {
         this.plugin = plugin;
+        this.importVanillaStats = importVanillaStats;
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
     }
 
+    public SimpleStatsListener(BukkitMain plugin) {
+        this(plugin, false);
+    }
+
     private Disposable addEntry(UUID uuid, String statName, StatTimeEntry entry) {
-        return PlayerManager.getInstance().getPlayer(uuid).subscribe(statsPlayer ->
-                StatManager.getInstance().getStat(statName).ifPresent(stat ->
-                        statsPlayer.getStats(stat).addEntry(entry)
-                )
-        );
+        return PlayerManager.getInstance().getPlayer(uuid).subscribe(statsPlayer -> StatManager.getInstance()
+                .getStat(statName).ifPresent(stat -> statsPlayer.getStats(stat).addEntry(entry)));
     }
 
     public Map<String, Object> getMetaData(LivingEntity entity) {
@@ -137,14 +150,16 @@ public class SimpleStatsListener implements Listener {
                     .reduce(Integer::min)
                     .orElse(0) * event.getRecipe().getResult().getAmount();
             // Check if it fits
-            int space = BukkitUtil.getRoomFor(event.getWhoClicked().getInventory().getStorageContents(), event.getRecipe().getResult());
+            int space = BukkitUtil.getRoomFor(event.getWhoClicked().getInventory().getStorageContents(),
+                    event.getRecipe().getResult());
             amountCreated = Math.min(amountCreated, space);
         } else {
             amountCreated = event.getRecipe().getResult().getAmount();
         }
-        if (amountCreated == 0) return; // This shouldn't ever happen, but just in case
+        if (amountCreated == 0)
+            return; // This shouldn't ever happen, but just in case
         this.addEntry(event.getWhoClicked().getUniqueId(), "Items crafted",
-                new StatTimeEntry(System.currentTimeMillis(),  amountCreated,
+                new StatTimeEntry(System.currentTimeMillis(), amountCreated,
                         Util.of("world", event.getWhoClicked().getWorld().getUID().toString(),
                                 "type", BukkitUtil.getMaterialType(event.getRecipe().getResult().getType()))));
 
@@ -177,13 +192,58 @@ public class SimpleStatsListener implements Listener {
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     protected void onPlayerJoin(PlayerJoinEvent event) {
-        PlayerManager.getInstance().getPlayer(event.getPlayer().getUniqueId()).subscribe(player ->
-            StatManager.getInstance().getStat("Last join").ifPresent(stat -> {
-                player.getStats(stat).resetWhere("world", event.getPlayer().getWorld().getUID().toString());
-                this.addEntry(event.getPlayer().getUniqueId(), "Last join",
-                        new StatTimeEntry(System.currentTimeMillis(), System.currentTimeMillis(), getMetaData(event.getPlayer())));
-            })
-        );
+        if (importVanillaStats) {
+            UUID uuid = event.getPlayer().getUniqueId();
+            File vanillaStats = new File(plugin.getServer().getWorlds().get(0).getWorldFolder(),
+                    "stats/" + uuid + ".json");
+            if (vanillaStats.exists()) {
+                try (FileReader reader = new FileReader(vanillaStats)) {
+                    JsonObject root = JsonParser.parseReader(reader).getAsJsonObject();
+                    JsonObject stats = root.getAsJsonObject("stats");
+                    if (stats != null) {
+                        PlayerManager.getInstance().getPlayer(uuid).subscribe(player -> {
+                            // Get DB IDs
+                            MySQLStatsPlayer mysqlPlayer = (player instanceof MySQLStatsPlayer)
+                                    ? (MySQLStatsPlayer) player
+                                    : null;
+                            String playerUuid = (mysqlPlayer != null) ? mysqlPlayer.getUuid().toString()
+                                    : uuid.toString();
+                            String worldUuid = event.getPlayer().getWorld().getUID().toString();
+                            try (java.sql.Connection con = plugin.getMySQLStorage().getConnection()) {
+                                // Delete old entries for each stat/type
+                                TypedStatStorage moveStorage = new TypedStatStorage(
+                                        StatManager.getInstance().getStat("Move").orElseThrow(() -> new IllegalStateException("Stat 'Move' not found")));
+                                moveStorage.deleteEntriesForPlayerType(con, uuid, worldUuid, "WALKING");
+                                TypedStatStorage jumpsStorage = new TypedStatStorage(
+                                        StatManager.getInstance().getStat("Jumps").orElseThrow(() -> new IllegalStateException("Stat 'Jumps' not found")));
+                                jumpsStorage.deleteEntriesForPlayerType(con, uuid, worldUuid, "JUMP");
+                                // For Playtime, if it uses a type, delete with null or "UNKNOWN" as needed
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+                            StatManager.getInstance().getStat("Jumps").ifPresent(stat -> player.getStats(stat).reset());
+                            StatManager.getInstance().getStat("Move").ifPresent(stat -> player.getStats(stat).reset());
+                            StatManager.getInstance().getStat("Playtime")
+                                    .ifPresent(stat -> player.getStats(stat).reset());
+                            importStat(event, uuid, stats, "minecraft:custom", "minecraft:jump", "Jumps", "JUMP");
+                            importStat(event, uuid, stats, "minecraft:custom", "minecraft:walk_one_cm", "Move",
+                                    "WALKING");
+                            importStat(event, uuid, stats, "minecraft:custom", "minecraft:play_one_minute", "Playtime",
+                                    null);
+                        }, err -> err.printStackTrace());
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        PlayerManager.getInstance().getPlayer(event.getPlayer().getUniqueId())
+                .subscribe(player -> StatManager.getInstance().getStat("Last join").ifPresent(stat -> {
+                    player.getStats(stat).resetWhere("world", event.getPlayer().getWorld().getUID().toString());
+                    this.addEntry(event.getPlayer().getUniqueId(), "Last join",
+                            new StatTimeEntry(System.currentTimeMillis(), System.currentTimeMillis(),
+                                    getMetaData(event.getPlayer())));
+                }));
         this.addEntry(event.getPlayer().getUniqueId(), "Times joined",
                 new StatTimeEntry(System.currentTimeMillis(), 1, getMetaData(event.getPlayer())));
         updateDatabase(event.getPlayer());
@@ -191,13 +251,13 @@ public class SimpleStatsListener implements Listener {
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     protected void onPlayerQuit(PlayerQuitEvent event) {
-        PlayerManager.getInstance().getPlayer(event.getPlayer().getUniqueId()).subscribe(player ->
-            StatManager.getInstance().getStat("Last quit").ifPresent(stat -> {
-                player.getStats(stat).resetWhere("world", event.getPlayer().getWorld().getUID().toString());
-                this.addEntry(event.getPlayer().getUniqueId(), "Last quit",
-                        new StatTimeEntry(System.currentTimeMillis(), System.currentTimeMillis(), getMetaData(event.getPlayer())));
-            })
-        );
+        PlayerManager.getInstance().getPlayer(event.getPlayer().getUniqueId())
+                .subscribe(player -> StatManager.getInstance().getStat("Last quit").ifPresent(stat -> {
+                    player.getStats(stat).resetWhere("world", event.getPlayer().getWorld().getUID().toString());
+                    this.addEntry(event.getPlayer().getUniqueId(), "Last quit",
+                            new StatTimeEntry(System.currentTimeMillis(), System.currentTimeMillis(),
+                                    getMetaData(event.getPlayer())));
+                }));
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
@@ -234,7 +294,8 @@ public class SimpleStatsListener implements Listener {
         if (!event.getSlotType().equals(InventoryType.SlotType.RESULT)) {
             return;
         }
-        if (!event.getAction().equals(InventoryAction.MOVE_TO_OTHER_INVENTORY) && !event.getAction().equals(InventoryAction.PICKUP_ALL)) {
+        if (!event.getAction().equals(InventoryAction.MOVE_TO_OTHER_INVENTORY)
+                && !event.getAction().equals(InventoryAction.PICKUP_ALL)) {
             return;
         }
         if (!(event.getWhoClicked() instanceof Player) || inventory.getSelectedRecipe() == null) {
@@ -243,13 +304,15 @@ public class SimpleStatsListener implements Listener {
         int trades = 1;
         if (event.isShiftClick()) {
             int possibleTrades = Arrays.stream(inventory.getStorageContents())
-                    .filter(tradeStack -> tradeStack != null && !Material.AIR.equals(tradeStack.getType()) && !tradeStack.isSimilar(inventory.getSelectedRecipe().getResult()))
-                    .mapToInt(tradeStack ->
-                            tradeStack.getAmount() / inventory.getSelectedRecipe().getIngredients().stream()
+                    .filter(tradeStack -> tradeStack != null && !Material.AIR.equals(tradeStack.getType())
+                            && !tradeStack.isSimilar(inventory.getSelectedRecipe().getResult()))
+                    .mapToInt(tradeStack -> tradeStack.getAmount()
+                            / inventory.getSelectedRecipe().getIngredients().stream()
                                     .filter(recipe -> recipe.isSimilar(tradeStack))
-                            .mapToInt(ItemStack::getAmount).sum()
-                    ).reduce(Math::min).orElse(0);
-            int space = BukkitUtil.getRoomFor(event.getWhoClicked().getInventory().getStorageContents(), inventory.getSelectedRecipe().getResult());
+                                    .mapToInt(ItemStack::getAmount).sum())
+                    .reduce(Math::min).orElse(0);
+            int space = BukkitUtil.getRoomFor(event.getWhoClicked().getInventory().getStorageContents(),
+                    inventory.getSelectedRecipe().getResult());
             int maxSpaceTraces = space / inventory.getSelectedRecipe().getResult().getAmount();
             trades = Math.min(possibleTrades, maxSpaceTraces);
         }
@@ -276,5 +339,64 @@ public class SimpleStatsListener implements Listener {
 
     private void updateDatabase(Player player) {
         plugin.getMySQLStorage().onPlayerJoin(player.getUniqueId(), player.getName());
+    }
+
+    private void importStat(PlayerJoinEvent event, UUID uuid, JsonObject stats, String category, String vanillaKey,
+            String pluginStat, String type) {
+        if (stats.has(category)) {
+            JsonObject cat = stats.getAsJsonObject(category);
+            if (cat.has(vanillaKey)) {
+                double value = cat.get(vanillaKey).getAsDouble();
+                Map<String, Object> meta = Util.of("world", event.getPlayer().getWorld().getUID().toString());
+                if (type != null)
+                    meta.put("type", type);
+                this.addEntry(uuid, pluginStat, new StatTimeEntry(System.currentTimeMillis(), value, meta));
+            }
+        }
+    }
+
+    public static boolean forceImportVanillaStats(BukkitMain plugin, UUID uuid) {
+        File vanillaStats = new File(plugin.getServer().getWorlds().get(0).getWorldFolder(), "stats/" + uuid + ".json");
+        if (!vanillaStats.exists()) {
+            return false;
+        }
+        try (FileReader reader = new FileReader(vanillaStats)) {
+            JsonObject root = JsonParser.parseReader(reader).getAsJsonObject();
+            JsonObject stats = root.getAsJsonObject("stats");
+            if (stats != null) {
+                File importedFlag = new File(plugin.getDataFolder(), "imported-" + uuid + ".flag");
+                if (importedFlag.exists())
+                    importedFlag.delete();
+                PlayerManager.getInstance().getPlayer(uuid).subscribe(player -> {
+                    StatManager.getInstance().getStat("Jumps").ifPresent(stat -> player.getStats(stat).reset());
+                    StatManager.getInstance().getStat("Move").ifPresent(stat -> player.getStats(stat).reset());
+                    StatManager.getInstance().getStat("Playtime").ifPresent(stat -> player.getStats(stat).reset());
+                    importStatStatic(plugin, player, stats, "minecraft:custom", "minecraft:jump", "Jumps", "JUMP");
+                    importStatStatic(plugin, player, stats, "minecraft:custom", "minecraft:walk_one_cm", "Move",
+                            "WALKING");
+                    importStatStatic(plugin, player, stats, "minecraft:custom", "minecraft:play_one_minute", "Playtime",
+                            null);
+                }, err -> err.printStackTrace());
+            }
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    private static void importStatStatic(BukkitMain plugin, me.kiratdewas.stats.player.StatsPlayer player,
+            JsonObject stats, String category, String vanillaKey, String pluginStat, String type) {
+        if (stats.has(category)) {
+            JsonObject cat = stats.getAsJsonObject(category);
+            if (cat.has(vanillaKey)) {
+                double value = cat.get(vanillaKey).getAsDouble();
+                Map<String, Object> meta = Util.of("world", plugin.getServer().getWorlds().get(0).getUID().toString());
+                if (type != null)
+                    meta.put("type", type);
+                StatManager.getInstance().getStat(pluginStat).ifPresent(stat -> player.getStats(stat).addEntry(
+                        new StatTimeEntry(System.currentTimeMillis(), value, meta)));
+            }
+        }
     }
 }

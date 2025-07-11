@@ -38,6 +38,9 @@ public class BlockBreak implements Listener {
         map.put("world", event.getBlock().getWorld().getUID().toString());
         map.put("material", BukkitUtil.getMaterialType(event.getBlock().getType()));
         map.put("tool", BukkitUtil.getItemType(event.getPlayer().getInventory().getItemInMainHand()));
+        map.put("loc_x", event.getBlock().getX());
+        map.put("loc_y", event.getBlock().getY());
+        map.put("loc_z", event.getBlock().getZ());
         return map;
     }
 }

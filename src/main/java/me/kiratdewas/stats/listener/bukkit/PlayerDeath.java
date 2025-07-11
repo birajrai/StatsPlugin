@@ -30,7 +30,12 @@ public class PlayerDeath implements Listener {
     }
 
     private Map<String, Object> generateMetadata(PlayerDeathEvent event) {
-        return Util.of("cause", event.getEntity().getLastDamageCause().getCause().toString(),
-                "world", event.getEntity().getLocation().getWorld().getUID().toString());
+        return Util.of(
+                "cause", event.getEntity().getLastDamageCause().getCause().toString(),
+                "world", event.getEntity().getLocation().getWorld().getUID().toString(),
+                "loc_x", event.getEntity().getLocation().getBlockX(),
+                "loc_y", event.getEntity().getLocation().getBlockY(),
+                "loc_z", event.getEntity().getLocation().getBlockZ()
+        );
     }
 }

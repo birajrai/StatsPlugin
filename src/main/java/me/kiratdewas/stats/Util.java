@@ -16,14 +16,12 @@ import java.util.logging.Logger;
 
 public class Util {
 
-    public static final Pattern PATTERN_UUID = Pattern.compile("^[a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}$", Pattern.CASE_INSENSITIVE);
-    public static final Pattern PATTERN_HEXED_UUID = Pattern.compile("^([a-z0-9]{8})([a-z0-9]{4})([a-z0-9]{4})([a-z0-9]{4})([a-z0-9]{12})$", Pattern.CASE_INSENSITIVE);
+    public static final Pattern PATTERN_UUID = Pattern
+            .compile("^[a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}$", Pattern.CASE_INSENSITIVE);
+    public static final Pattern PATTERN_HEXED_UUID = Pattern
+            .compile("^([a-z0-9]{8})([a-z0-9]{4})([a-z0-9]{4})([a-z0-9]{4})([a-z0-9]{12})$", Pattern.CASE_INSENSITIVE);
 
     private static final Logger LOG = Logger.getLogger(Util.class.getName());
-
-    public static Optional<Integer> getWorldId(String uuid) {
-        return generateUUID(uuid).flatMap(val -> MySQLWorldManager.getInstance().getWorld(val));
-    }
 
     public static Optional<UUID> generateUUID(String hex) {
         try {
@@ -58,9 +56,10 @@ public class Util {
                 .subscribe(player -> {
                     disposable.add(player.getObservable()
                             .subscribe(container -> disposable.add(container.getPublishSubject()
-                                    .subscribe(entry -> consumer.accept(player, container, entry), Util::handleError)), Util::handleError));
+                                    .subscribe(entry -> consumer.accept(player, container, entry), Util::handleError)),
+                                    Util::handleError));
                     player.getContainers().forEach(cont -> // Listen to updates of already-in-place containers
-                            disposable.add(cont.subscribe(entry -> consumer.accept(player, cont, entry), Util::handleError)));
+                    disposable.add(cont.subscribe(entry -> consumer.accept(player, cont, entry), Util::handleError)));
                 }, Util::handleError));
         return disposable;
     }
