@@ -1,6 +1,12 @@
-mysql:
-  host: localhost
-  port: 3306
-  database: statsreloaded
-  username: username
-  password: password
+# Database type: mysql or mongodb
+database:
+  type: mysql
+  mysql:
+    host: localhost
+    port: 3306
+    database: statsreloaded
+    username: root
+    password: ""
+  mongodb:
+    uri: mongodb://localhost:27017
+    database: statsreloaded
