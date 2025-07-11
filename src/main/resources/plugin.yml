@@ -1,8 +1,13 @@
 name: StatsReloaded
 version: POM_VERSION
-main: me.kiratdewas.StatsReloaded
+main: me.kiratdewas.StatsReloadedPlugin
 author: KiratDewas
-api-version: 1.17
+api-version: 1.21
 commands:
   statsreloaded:
     description: The main StatsReloaded command
+
+libraries:
+  - org.mongodb:mongodb-driver-sync:4.11.1
+  - com.fasterxml.jackson.core:jackson-databind:2.17.1
+  - com.mysql:mysql-connector-j:8.4.0
