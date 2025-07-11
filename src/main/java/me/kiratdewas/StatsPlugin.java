@@ -44,6 +44,8 @@ public class StatsPlugin extends JavaPlugin {
         } else if ("mongodb".equalsIgnoreCase(dbType)) {
             mongoConfig = ConfigLoader.loadMongoConfig(config);
         }
+        // Re-instantiate dbCore to reload database connections with new config
+        dbCore = new Core(this);
     }
 
     public void importStats() {
