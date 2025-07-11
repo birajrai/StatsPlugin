@@ -1,3 +1,5 @@
+cmi-compatible: false
+luckperms-compatible: false
 # Database type: mysql or mongodb
 database:
   type: mysql
