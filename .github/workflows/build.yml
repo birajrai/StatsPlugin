@@ -32,13 +32,13 @@ jobs:
       run: mkdir -p builds
       
     - name: Copy JAR to builds directory
-      run: cp target/StatsReloaded-*.jar builds/here.jar
+      run: cp target/StatsReloaded-*.jar builds/statsreloaded.jar
       
     - name: Upload JAR artifact
       uses: actions/upload-artifact@v4
       with:
         name: StatsReloaded-plugin
-        path: builds/here.jar
+        path: builds/statsreloaded.jar
         retention-days: 30
         
     - name: Upload to releases (on release)
@@ -48,7 +48,7 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ github.event.release.upload_url }}
-        asset_path: ./builds/here.jar
+        asset_path: ./builds/statsreloaded.jar
         asset_name: StatsReloaded-${{ github.event.release.tag_name }}.jar
         asset_content_type: application/java-archive
 
@@ -118,6 +118,6 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./builds/here.jar
+        asset_path: ./builds/statsreloaded.jar
         asset_name: StatsReloaded-${{ steps.release_notes.outputs.new_version }}.jar
         asset_content_type: application/java-archive 
