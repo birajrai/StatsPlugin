@@ -65,6 +65,10 @@
                     </includes>
                     <replacements>
                         <replacement>
+                            <token>POM_NAME</token>
+                            <value>${project.artifactId}</value>
+                        </replacement>
+                        <replacement>
                             <token>POM_VERSION</token>
                             <value>${project.version}</value>
                         </replacement>

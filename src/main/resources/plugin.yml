@@ -1,8 +1,8 @@
-name: {name}
-version: {version}
+name: POM_NAME
+version: POM_VERSION
 main: me.kiratdewas.StatsPlugin
 author: KiratDewas
-api-version: 1.21
+api-version: "1.21"
 commands:
   stats:
     description: The main Stats command
