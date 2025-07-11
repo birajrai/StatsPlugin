@@ -29,12 +29,16 @@ public class StatsCommand implements CommandExecutor {
                 return true;
             } else if (args[0].equalsIgnoreCase("update") && args.length > 1) {
                 String playerName = args[1];
-                boolean success = importPlayerStats(playerName);
-                if (success) {
-                    sender.sendMessage("[Stats] Updated stats for " + playerName);
-                } else {
-                    sender.sendMessage("[Stats] Could not find stats for " + playerName);
-                }
+                plugin.getServer().getScheduler().runTaskAsynchronously(plugin, () -> {
+                    boolean success = importPlayerStats(playerName);
+                    plugin.getServer().getScheduler().runTask(plugin, () -> {
+                        if (success) {
+                            sender.sendMessage("[Stats] Updated stats for " + playerName);
+                        } else {
+                            sender.sendMessage("[Stats] Could not find stats for " + playerName);
+                        }
+                    });
+                });
                 return true;
             }
         }

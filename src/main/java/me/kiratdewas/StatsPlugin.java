@@ -49,17 +49,39 @@ public class StatsPlugin extends JavaPlugin {
     }
 
     public void importStats() {
-        File statsDir = new File(getServer().getWorldContainer(), "world/stats");
-        if (!statsDir.exists() || !statsDir.isDirectory()) {
-            getLogger().warning("Directory world/stats/ does not exist.");
-            return;
-        }
-        File[] files = statsDir.listFiles((dir, name) -> name.endsWith(".json"));
-        if (files == null || files.length == 0) {
-            getLogger().info("No JSON files found in world/stats/");
-            return;
-        }
-        dbCore.bulkImport(files);
+        // Run the whole import process asynchronously except for Bukkit API calls
+        getServer().getScheduler().runTaskAsynchronously(this, () -> {
+            File statsDir = new File(getServer().getWorldContainer(), "world/stats");
+            if (!statsDir.exists() || !statsDir.isDirectory()) {
+                getLogger().warning("Directory world/stats/ does not exist.");
+                return;
+            }
+            File[] files = statsDir.listFiles((dir, name) -> name.endsWith(".json"));
+            if (files == null || files.length == 0) {
+                getLogger().info("No JSON files found in world/stats/");
+                return;
+            }
+            for (File file : files) {
+                // For each file, parse JSON async, then switch to main thread for Bukkit API,
+                // then back to async for DB
+                try {
+                    com.fasterxml.jackson.databind.JsonNode json = objectMapper.readTree(file);
+                    String uuid = file.getName().replace(".json", "");
+                    // Switch to main thread for Bukkit API
+                    getServer().getScheduler().runTask(this, () -> {
+                        com.fasterxml.jackson.databind.JsonNode enriched = me.kiratdewas.importer.PlayerStatsImporter
+                                .injectBalanceAndGroup(json, java.util.UUID.fromString(uuid));
+                        // Switch back to async for DB update
+                        getServer().getScheduler().runTaskAsynchronously(this, () -> {
+                            dbCore.upsertPlayerStats(file, uuid); // upsertPlayerStats will use the enriched data if
+                                                                  // needed
+                        });
+                    });
+                } catch (Exception e) {
+                    getLogger().warning("Failed to process file: " + file.getName() + ", error: " + e.getMessage());
+                }
+            }
+        });
     }
 
     public String getDbType() {
