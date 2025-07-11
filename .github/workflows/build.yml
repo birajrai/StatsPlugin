@@ -50,4 +50,74 @@ jobs:
         upload_url: ${{ github.event.release.upload_url }}
         asset_path: ./builds/here.jar
         asset_name: StatsReloaded-${{ github.event.release.tag_name }}.jar
+        asset_content_type: application/java-archive
+
+  create-release:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+      
+    - name: Download build artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: StatsReloaded-plugin
+        path: builds/
+      
+    - name: Generate release notes
+      id: release_notes
+      run: |
+        # Get the latest tag
+        LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+        
+        # Get commits since last tag
+        COMMITS=$(git log --pretty=format:"- %s" ${LATEST_TAG}..HEAD)
+        
+        if [ -z "$COMMITS" ]; then
+          COMMITS="- No new commits since last release"
+        fi
+        
+        # Create release notes
+        RELEASE_NOTES="## What's Changed
+        
+        $COMMITS
+        
+        ## Download
+        Download the latest version of StatsReloaded plugin."
+        
+        echo "release_notes<<EOF" >> $GITHUB_OUTPUT
+        echo "$RELEASE_NOTES" >> $GITHUB_OUTPUT
+        echo "EOF" >> $GITHUB_OUTPUT
+        
+        # Generate new version (increment patch version)
+        CURRENT_VERSION=$(echo $LATEST_TAG | sed 's/v//')
+        IFS='.' read -ra VERSION_PARTS <<< "$CURRENT_VERSION"
+        NEW_PATCH=$((VERSION_PARTS[2] + 1))
+        NEW_VERSION="v${VERSION_PARTS[0]}.${VERSION_PARTS[1]}.$NEW_PATCH"
+        echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
+      
+    - name: Create Release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ steps.release_notes.outputs.new_version }}
+        release_name: StatsReloaded ${{ steps.release_notes.outputs.new_version }}
+        body: ${{ steps.release_notes.outputs.release_notes }}
+        draft: false
+        prerelease: false
+        
+    - name: Upload Release Asset
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./builds/here.jar
+        asset_name: StatsReloaded-${{ steps.release_notes.outputs.new_version }}.jar
         asset_content_type: application/java-archive 
